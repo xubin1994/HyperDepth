@@ -12,9 +12,21 @@ def load_images(file_list, img_path, gt_path, line_idx, displacements, max_radiu
     print("TODO")
 
 
+
+
 # reads images memory as NP arrays
 def read_images(file_list, img_path):
-    print("TODO")
+    img_list = []
+    
+    for idx, entry in file_list.iterrows():
+        if idx%100 == 0:
+            print ("Reading image " + idx)
+        img_name = "%s/%s.png" % (img_path, entry['hash'])
+
+        image = cv2.imread(img_name, 0)
+        img_list.append(image)
+
+    return img_list
 
 def list_images(dir):
     fileList = os.listdir(dir)
@@ -51,7 +63,10 @@ def create_dataframe(feature_vec, displacement_vec, xcoord_vec, intensity_vec):
 
 # calculates total signal along a line within a given imgslice
 def check_signal(imgslice, radius):
+    imgslice = np.float32(imgslice)
+
     print("TODO")
+
 
 
 # extracts sets of feature vectors from an image at predefined coords
@@ -64,8 +79,13 @@ def extract_fvecs_array(images, displacements, max_radius, n_x):
 
 # generates pre-defined displacement vectors (? do I need this?)
 def generate_displacements(num_features, max_radius):
-    print("TODO")
     # might need to handle zero displacement as well
+    line_displacements = []
+
+    for disp in range(num_features):
+        line_displacements.append(np.random.randint(low = -max_radius, high = max_radius, size = 4)) # size might change
+    return line_displacements
+    
 
 # calculates pixel difference between displacement vectors along a given line
 def extract_line(imgslice, radius, uu, vv):
