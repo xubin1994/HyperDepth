@@ -25,6 +25,9 @@
     <Compile Include="evaluations.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="GTgen.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="utilities.py">
       <SubType>Code</SubType>
     </Compile>
