@@ -2,15 +2,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>a5d67a9c-a2d2-4de4-bfb4-e565592128fa</ProjectGuid>
-    <ProjectHome>.</ProjectHome>
-    <StartupFile>HyperDepth.py</StartupFile>
+    <ProjectGuid>10dbdcbf-ee9a-4cc1-b7d3-21ba394e71bd</ProjectGuid>
+    <ProjectHome>
+    </ProjectHome>
+    <StartupFile>calib.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>HyperDepth</Name>
-    <RootNamespace>HyperDepth</RootNamespace>
+    <Name>calib</Name>
+    <RootNamespace>charucoCalib</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,15 +22,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="HyperDepth.py" />
-    <Compile Include="evaluations.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GTgen.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="PatchMatch.py" />
-    <Compile Include="utilities.py">
+    <Compile Include="calib.py" />
+    <Compile Include="rectify.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

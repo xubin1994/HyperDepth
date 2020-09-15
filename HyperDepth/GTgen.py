@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import utilities as utils
+import PatchMatch as pm
 
 data_path = "C:\\Users\\Zoe\\Documents\\Thesis\\Test Data\\playground-hyperdepth-master-images"
 save_path = "C:\\Users\\Zoe\\Documents\\Thesis\\Test Data\\playground-hyperdepth-GT"
@@ -24,17 +25,17 @@ img_ref = cv2.imread(ref_path, 0)
 # get list of images
 img_list = utils.list_images(data_path)
 
-# set up cv2's block matching algorithm 
 
-bm_alg = cv2.StereoBM_create(numDisparities = None, blockSize = block_size)
-bm_alg.setMinDisparity(0)
 
 # loop over all images & generate disparity map
 
 for idx, entry in img_list.iterrows():
     print("idx = " + idx)
     img = cv2.imread(entry['filename'], 0)
-    disp_map = bm_alg.compute(img, img_ref)
+    pm_result = pm.main(img, img_ref)
+
+    #calc disparity from pm_result?
+
 
     # save disparity map to disk
     disp_map[disp_map<0] = 0 # remove any <0 values
