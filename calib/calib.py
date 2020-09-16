@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 # Camera calibration
 #============================================#Define size of chessboard target.
 chessboard_size = (9,11)
-circles_grid_size = (5,4)
+circles_grid_size = (4,11)
 
 #Define arrays to save detected points
 obj_points_left = [] #3D points in real world space 
@@ -29,6 +29,14 @@ proj_objp[:,:2] = np.mgrid[0:circles_grid_size[0], 0:circles_grid_size[1]].T.res
 
 #define criteria for subpixel accuracy
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+
+#define params for detectCirclesGrid
+params = cv2.SimpleBlobDetector_Params()
+params.minArea = 10;
+params.minDistBetweenBlobs = 5;
+#params.filterByCircularity = True
+#params.minCircularity = 0.1
+detector = cv2.SimpleBlobDetector_create(params)
 
 #read images
 left_camera = glob.glob("C:\\Users\\Zoe\\Desktop\\calibimgs\\test_small\\*")
@@ -84,12 +92,18 @@ for image in left_camera:
 
 
     if ret_left == True:
+
         obj_points_left.append(objp_left)
 
         #refine corner location (to subpixel accuracy) based on criteria.
         corners2 = cv2.cornerSubPix(gray_image_left, corners_left, (5,5), (-1,-1), criteria)
         
         img_points_left.append(corners2)
+
+        #img = cv2.drawChessboardCorners(img_left.copy(), (9,11), corners_left, ret_left)
+        #cv2.imshow('img', img)
+        #cv2.waitKey(2000)
+    
     else:
         print("Chessboard not detected!")
 
@@ -99,6 +113,7 @@ ret_left, K_left, dist_left, rvecs_left, tvecs_left = cv2.calibrateCamera(obj_po
                                                                           gray_image_left.shape[::-1], None, None)
 rvecs_array = np.asarray(rvecs_left)
 tvecs_array = np.asarray(tvecs_left)
+print("Camera matrix = ", K_left)
 print("finding circles...")
 
 img_counter = 0
@@ -107,15 +122,21 @@ for image in left_camera:
     gray_proj_img = cv2.cvtColor(proj_img, cv2.COLOR_BGR2GRAY)
 
     #find circles
-    ret_circ, circles = cv2.findCirclesGrid(gray_proj_img, circles_grid_size, cv2.CALIB_CB_ASYMMETRIC_GRID)
+    ret_circ, circles = cv2.findCirclesGrid(gray_proj_img, circles_grid_size, flags=cv2.CALIB_CB_ASYMMETRIC_GRID)
 
     if ret_circ == True:
+        #print("found circles")
         proj_obj_points.append(proj_objp)
 
-        corners2 = cv2.cornerSubPix(gray_proj_img, circles, (5,5), (-1,-1), criteria)
+        corners2 = cv2.cornerSubPix(gray_proj_img, circles, (4,11), (-1,-1), criteria)
 
         circles3D = intersectCircRayToBoard(circles, rvecs_array[img_counter], tvecs_array[img_counter], K_left, dist_left)
         proj_img_points.append(corners2)
+
+        # verification
+        #proj_img = cv2.drawChessboardCorners(proj_img.copy(), (4,11), circles, ret_circ)
+        #cv2.imshow('img', proj_img)
+        #cv2.waitKey(1000)
     
     else:
         print("no circles detected!")
@@ -126,6 +147,7 @@ print("calibrating projector...")
 
 ret_proj, K_proj, dist_proj, rvecs_proj, tvecs_proj = cv2.calibrateCamera(proj_obj_points, proj_img_points, (1024, 768), None, None)
 
+print("projector matrix = ", K_proj)
 print("stereo calibrating...")
 # stereo calibration
 retval, K1, dist1, K2, dist2, R, T, E, F = cv2.stereoCalibrate(obj_points_left, img_points_left, proj_img_points, K_left, 
