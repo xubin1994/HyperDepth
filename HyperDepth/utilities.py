@@ -104,28 +104,44 @@ def check_signal(imgslice, radius):
     filtered_line = filtered[radius, radius:-radius] * np.square(2*radius+1)
     return filtered_line
 
+def extract_image_feats(image, img_h, img_w, img_dims):
+    #init array to return
+    #im_feats = np.zeros((img_h, img_w, img_dims), dtype='float32')
+
+    im_feats = [] #not preallocating for now bc of np.append nonsense, fix later for speed
+    for line_idx in range(img_h):
+        line = image[:][line_idx]
+        #line_feats = np.zeros(img_w, dtype='float32')
+        line_feats = []
+        for pixel in range(img_w):
+            #print(line[pixel].shape)
+            p = line[pixel]
+            line_feats.append(p)
+        im_feats.append(line_feats)
+    im_feats = np.asarray(im_feats)
+    return im_feats
 
 
-# extracts sets of feature vectors from an image at predefined coords
-def extract_image(image, line_idx, displacements, max_radius, n_x):
-    print("extracting features from image")
-    # preallocating for speed
-    im_feat_vec = np.zeros( [len(line_idx),n_x,len(displacements)], dtype=np.int16 )
-    im_pix_vec = np.zeros( [len(line_idx),n_x], dtype=np.int16)
-    im_ill_vec = np.zeros( [len(line_idx),n_x], dtype=np.float32)
-    x_vec = np.arange( n_x )
+## extracts sets of feature vectors from an image at predefined coords
+#def extract_image(image, line_idx, displacements, max_radius, n_x):
+#    print("extracting features from image")
+#    # preallocating for speed
+#    im_feat_vec = np.zeros( [len(line_idx),n_x,len(displacements)], dtype=np.int16 )
+#    im_pix_vec = np.zeros( [len(line_idx),n_x], dtype=np.int16)
+#    im_ill_vec = np.zeros( [len(line_idx),n_x], dtype=np.float32)
+#    x_vec = np.arange( n_x )
 
-    # did not pad image with 0s -- might need to do later
-    for l_idx, line in enumerate(line_idx):
-        # do I need a ROI if i'm using the whole image?
-        roi = image[line-max_radius:line+max-radius+1:]
+#    # did not pad image with 0s -- might need to do later
+#    for l_idx, line in enumerate(line_idx):
+#        # do I need a ROI if i'm using the whole image?
+#        roi = image[line-max_radius:line+max-radius+1:]
 
-        for disp_idx, dd in enumerate(displacements):
-            im_feat_vec[l_idx, :, disp_idx] = extract_line(roi, [dd[0],dd[1]], [dd[2],dd[3]], max_radius)
-        im_pix_vec[l_idx, :] = x_vec
-        im_ill_vec[l_idx, :] = check_signal(roi, max_radius)
+#        for disp_idx, dd in enumerate(displacements):
+#            im_feat_vec[l_idx, :, disp_idx] = extract_line(roi, [dd[0],dd[1]], [dd[2],dd[3]], max_radius)
+#        im_pix_vec[l_idx, :] = x_vec
+#        im_ill_vec[l_idx, :] = check_signal(roi, max_radius)
 
-    return im_feat_vec, im_pix_vec, im_ill_vec
+#    return im_feat_vec, im_pix_vec, im_ill_vec
 
 # extracts sets of feature vectors from an NP array of images at predefined coords
 def extract_array(images, displacements, max_radius, n_x):

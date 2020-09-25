@@ -1,4 +1,5 @@
 import cv2
+from cv2 import xfeatures2d_SIFT
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -9,19 +10,41 @@ import glob
 import utilities as utils
 import evaluations as evals
 import PatchMatch as pm
+import subpixel as sp
 
 def get_dataset():
-    images = glob.glob("F:/CTD Data/**/ambient0_0.npy")
-    disps = glob.glob("F:/CTD Data/**/disp0_0.npy")
+    images = glob.glob("C:/Users/Zoe/Documents/Thesis/CTD Data Test/**/ambient0_0.npy")
+    disps = glob.glob("C:/Users/Zoe/Documents/Thesis/CTD Data Test/**/disp0_0.npy")
+    images_all = [] 
+    disps_all = []
+    
+    # make ndarrays of images, disps
+
+    for i in images:
+        #print(i)
+        im = np.load(i)
+        im = np.transpose(im, (1, 2, 0))
+        im_gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+        images_all.append(im_gray)
+
+    for d in disps:
+        disp = np.load(d)
+        disps_all.append(disp)
+
+
+    images_all = np.asarray(images_all)
+    disps_all = np.asarray(disps_all)
     #reshape if necessary?
-    X_train, X_test, y_train, y_test = train_test_split(images, disps, test_size = 0.33, random_state = 1234)
+    X_train, X_test, y_train, y_test = train_test_split(images_all, disps_all, test_size = 0.33, random_state = 1234)
 
   #  print("done loading")
-    
-    test1 = np.load(X_train[1000])
-    print(test1.shape)
-    test2 = np.load(y_train[1000])
-    print(test2.shape)
+
+   # print(X_train.shape)
+    #print(X_train[1])
+   # test1 = X_train[10]
+   # print(test1.shape)
+    #test2 = (y_train[10])
+    #print(test2.shape)
     #test1 = np.transpose(test1, (1, 2, 0))
 
    # plt.show()
@@ -53,12 +76,13 @@ def winner_check():
 def disp_check():
 
     return
+
 def invalidate():
 
     return
 
 def main():
-    print("hello world")
+    #print("hello world")
     forest_depth = 12
     num_trees = 4
     img_h = 480
@@ -79,8 +103,16 @@ def main():
     training_rmse = [0]*img_h
     test_rmse = [0]*img_h
     kept_feats = [0]*img_h
+    #print(type(X_train))
+    print(len(X_train))
+    print(len(y_train))
+    # loop through individual lines of images, grab features (individual pixels)
+    for img_idx in range (len(X_train)):
 
-    # loop through individual lines of images
+        imgX = X_train[img_idx]
+        imgY = y_train[img_idx]
+        featsX = utils.extract_image_feats(imgX, img_h, img_w, imgX.shape[0])
+        featsY = utils.extract_image_feats(imgY, img_h, img_w, imgY.shape[0])
 
 main()
 

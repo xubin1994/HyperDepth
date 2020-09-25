@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 #============================================#Define size of chessboard target.
 chessboard_size = (9,11)
 circles_grid_size = (4,11)
+rows, cols = 4, 11
+grid_size = 0.03 #size between dots -- 3cm (MIGHT CHANGE)
 
 #Define arrays to save detected points
 obj_points_left = [] #3D points in real world space 
@@ -24,8 +26,9 @@ objp_left = np.zeros((np.prod(chessboard_size),3),dtype=np.float32)
 objp_left[:,:2] = np.mgrid[0:chessboard_size[0], 0:chessboard_size[1]].T.reshape(-1,2)
 
 # temp array for 3D points -- projector
-proj_objp = np.zeros((np.prod(circles_grid_size),3),dtype=np.float32)
-proj_objp[:,:2] = np.mgrid[0:circles_grid_size[0], 0:circles_grid_size[1]].T.reshape(-1,2)
+proj_objp = []
+#proj_objp = np.zeros((np.prod(circles_grid_size),3),dtype=np.float32)
+#proj_objp[:,:2] = np.mgrid[0:circles_grid_size[0], 0:circles_grid_size[1]].T.reshape(-1,2)
 
 #define criteria for subpixel accuracy
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -126,7 +129,14 @@ for image in left_camera:
 
     if ret_circ == True:
         #print("found circles")
+
+        for i in range(rows):
+            for j in range(cols):
+                proj_objp.append( (i*grid_size, (2*j + i%2)*grid_size, 0) )
+
+        #proj_objp = np.asarray(proj_objp)
         proj_obj_points.append(proj_objp)
+        #plt.scatter(proj_obj_points[:,0], proj_obj_points[:,1])
 
         corners2 = cv2.cornerSubPix(gray_proj_img, circles, (4,11), (-1,-1), criteria)
 
@@ -141,9 +151,11 @@ for image in left_camera:
     else:
         print("no circles detected!")
     img_counter+= 1
+    
 
 # calibrate projector
 print("calibrating projector...")
+proj_obj_points = np.asarray(proj_obj_points).astype('float32')
 
 ret_proj, K_proj, dist_proj, rvecs_proj, tvecs_proj = cv2.calibrateCamera(proj_obj_points, proj_img_points, (1024, 768), None, None)
 
