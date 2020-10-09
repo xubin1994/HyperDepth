@@ -42,20 +42,6 @@ def load_images(file_list, img_path, gt_path, line_idx, displacements, max_radiu
 
     return feat_vec_list, disp_vec_list, pixel_vec_list, ill_vec_list
 
-# reads images memory as NP arrays
-def read_images(file_list, img_path):
-    img_list = []
-    
-    for idx, entry in file_list.iterrows():
-        if idx%100 == 0:
-            print ("Reading image " + idx)
-        img_name = "%s/%s.png" % (img_path, entry['hash'])
-
-        image = cv2.imread(img_name, 0)
-        img_list.append(image)
-
-    return img_list
-
 def list_images(dir):
     print("getting list of images")
     fileList = os.listdir(dir)
@@ -104,13 +90,24 @@ def check_signal(imgslice, radius):
     filtered_line = filtered[radius, radius:-radius] * np.square(2*radius+1)
     return filtered_line
 
+#extracts features from a single image
 def extract_image_feats(image, img_h, img_w, img_dims):
     #init array to return
     #im_feats = np.zeros((img_h, img_w, img_dims), dtype='float32')
 
     im_feats = [] #not preallocating for now bc of np.append nonsense, fix later for speed
+
     for line_idx in range(img_h):
-        line = image[:][line_idx]
+
+        if img_dims == 1:
+            #print("single channel")
+            line = image[0][:][line_idx]
+            #print(line.shape)
+        else:
+           # print("color img")
+            line = image[:][line_idx]
+            #print(line.shape)
+
         #line_feats = np.zeros(img_w, dtype='float32')
         line_feats = []
         for pixel in range(img_w):
@@ -121,45 +118,20 @@ def extract_image_feats(image, img_h, img_w, img_dims):
     im_feats = np.asarray(im_feats)
     return im_feats
 
+#returns dataframes containing all features of input sets of images
+#def get_feature_dataframe(X_train, y_train, X_test, y_test, img_h, img_w):
 
-## extracts sets of feature vectors from an image at predefined coords
-#def extract_image(image, line_idx, displacements, max_radius, n_x):
-#    print("extracting features from image")
-#    # preallocating for speed
-#    im_feat_vec = np.zeros( [len(line_idx),n_x,len(displacements)], dtype=np.int16 )
-#    im_pix_vec = np.zeros( [len(line_idx),n_x], dtype=np.int16)
-#    im_ill_vec = np.zeros( [len(line_idx),n_x], dtype=np.float32)
-#    x_vec = np.arange( n_x )
+#    #preallocate for speed later
+#    X_train_df = pd.DataFrame()
+#    y_train_df = pd.DataFrame()
+#    X_test_df = pd.DataFrame()
+#    y_test_df = pd.DataFrame()
 
-#    # did not pad image with 0s -- might need to do later
-#    for l_idx, line in enumerate(line_idx):
-#        # do I need a ROI if i'm using the whole image?
-#        roi = image[line-max_radius:line+max-radius+1:]
+#    for img in X_train:
+#        #extract feats from img
+#        feats = extract_image_feats(img, img_h, img_w, img.shape[0])
 
-#        for disp_idx, dd in enumerate(displacements):
-#            im_feat_vec[l_idx, :, disp_idx] = extract_line(roi, [dd[0],dd[1]], [dd[2],dd[3]], max_radius)
-#        im_pix_vec[l_idx, :] = x_vec
-#        im_ill_vec[l_idx, :] = check_signal(roi, max_radius)
 
-#    return im_feat_vec, im_pix_vec, im_ill_vec
 
-# extracts sets of feature vectors from an NP array of images at predefined coords
-def extract_array(images, displacements, max_radius, n_x):
-    print("TODO")
 
-# generates pre-defined displacement vectors (? do I need this?)
-def generate_displacements(num_features, max_radius):
-    print("generating random displacements")
-    # might need to handle zero displacement as well
-    line_displacements = []
-
-    for disp in range(num_features):
-        line_displacements.append(np.random.randint(low = -max_radius, high = max_radius, size = 4)) # size might change
-    return line_displacements
-    
-
-# calculates pixel difference between displacement vectors along a given line
-def extract_line(imgslice, radius, uu, vv):
-    # uu, vv = 2D pixel offset values
-    print("TODO")
 
