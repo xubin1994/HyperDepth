@@ -63,20 +63,20 @@ def list_images(dir):
     return file_dframe
 
 # creates a pd.DataFrame from array data
-def create_dataframe(feature_vec, displacement_vec, xcoord_vec, intensity_vec):
-    print("creating dataframes")
-    df_features = pd.DataFrame(np.reshape(feature_vec[-1, feature_vec.shape[2]]))
+#def create_dataframe(feature_vec, displacement_vec, xcoord_vec, intensity_vec):
+#    print("creating dataframes")
+#    df_features = pd.DataFrame(np.reshape(feature_vec[-1, feature_vec.shape[2]]))
 
-    df_features['displc'] = np.reshape(displacement_vec, [-1])
-    df_features['xcoord'] = np.reshape(xcoord_vec, [-1])
-    df_features['intens'] = np.reshape(intensity_vec, [-1])
+#    df_features['displc'] = np.reshape(displacement_vec, [-1])
+#    df_features['xcoord'] = np.reshape(xcoord_vec, [-1])
+#    df_features['intens'] = np.reshape(intensity_vec, [-1])
 
-    df_features = df_features(df_features['displc'] > 0) # filter out undetermined displacements
+#    df_features = df_features(df_features['displc'] > 0) # filter out undetermined displacements
 
-    # might need more filtering?
-    df_features['labels'] = df_features['xcoord'] - df_features['displc']
+#    # might need more filtering?
+#    df_features['labels'] = df_features['xcoord'] - df_features['displc']
 
-    return df_features
+#    return df_features
 
 # calculates TOTAL signal along a line within a given imgslice
 # might have to calculate within a sampled window, rather than full slice
@@ -118,18 +118,28 @@ def extract_image_feats(image, img_h, img_w, img_dims):
     im_feats = np.asarray(im_feats)
     return im_feats
 
-#returns dataframes containing all features of input sets of images
-#def get_feature_dataframe(X_train, y_train, X_test, y_test, img_h, img_w):
+#extracts a single line of features from an image at given index
+def extract_line(image, img_w, img_dims, idx):
 
-#    #preallocate for speed later
-#    X_train_df = pd.DataFrame()
-#    y_train_df = pd.DataFrame()
-#    X_test_df = pd.DataFrame()
-#    y_test_df = pd.DataFrame()
+    feats = []
 
-#    for img in X_train:
-#        #extract feats from img
-#        feats = extract_image_feats(img, img_h, img_w, img.shape[0])
+    if img_dims == 1:
+        #print("single channel")
+        line = image[0][:][idx]
+        #print(line.shape)
+    else:
+        # print("color img")
+        line = image[:][idx]
+        #print(line.shape)
+
+    #line_feats = np.zeros(img_w, dtype='float32')
+    for pixel in range(img_w):
+        #print(line[pixel].shape)
+        p = line[pixel]
+        feats.append(p)
+    return feats
+
+#def eval_accuracy(train, test, model, verbose=True):
 
 
 

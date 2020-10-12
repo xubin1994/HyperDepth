@@ -31,8 +31,9 @@ def get_dataset():
 
     for d in disps:
         disp = np.load(d)
-
-        disps_all.append(disp)
+        disp = disp[0][:][:] #img is already grayscale but is wrong shape --> need size (img_h, img_w) instead of (1, img_h, img_w)
+        disp_normalized = cv2.normalize(disp, None, 0, 255, cv2.NORM_MINMAX).astype('uint8')
+        disps_all.append(disp_normalized)
 
 
     images_all = np.asarray(images_all)
@@ -108,37 +109,56 @@ def main():
     kept_feats = [0]*img_h
 
     # loop through individual lines of images, grab features (individual pixels)
-    featsX_all = []
-    featsY_all = []
-    for img_idx in range (len(X_train)): #X/Y_train same size
+    featsX_all = np.zeros((img_h,len(X_train),img_w))
+    featsY_all = np.zeros((img_h,len(y_train),img_w))
+    #for each image in training set
 
-        imgX = X_train[img_idx]
-        imgY = y_train[img_idx]
-        featsX = utils.extract_image_feats(imgX, img_h, img_w, imgX.shape[0])
-        featsY = utils.extract_image_feats(imgY, img_h, img_w, imgY.shape[0])
-        featsX_all.append(featsX)
-        featsY_all.append(featsY)
+    for line_idx in range(img_h):
+        for image in range(len(X_train)):
+            for pixel in range(img_w):
+                featsX_all[line_idx][image][pixel] = X_train[image][line_idx][pixel]
+    print(y_train.shape)
+    for line_idx in range(img_h):
+        for image in range(len(y_train)):
+            for pixel in range(img_w):
+                featsY_all[line_idx][image][pixel] = y_train[image][line_idx][pixel]
 
-    #grab subpixel accuracy feats. using SIFT
-    sift = cv2.xfeatures2d.SIFT_create()
-    cv2.imshow("grayscale img", X_train[10])
-    cv2.waitKey(0)
 
-    kp, descriptors = sift.detectAndCompute(X_train[10], None)
-    img = cv2.drawKeypoints(X_train[10],kp,X_train[10])
-    cv2.imshow("keypoints", img)
-    cv2.waitKey(0)
+    # fit models to scanlines
+
+    for line_idx in range(img_h):
+        models[line_idx].fit(featsX_all[line_idx], featsY_all[line_idx])
+
+        #compute accuracy
+        # NOTE: RFC.score only returns mean accuracy, not RMSE -- add change later
+        # NOTE: currently throws error because .score doesn't support anything other than binary classification
+        temp = models[line_idx].score(featsX_all[line_idx], featsY_all[line_idx])
+        training_acc[line_idx], test_acc[line_idx] = temp
+
+    print("End results:")
+    print("training accuracy: \t%0.4g +/- %g" % (np.mean(training_acc),np.std(training_acc)) )
+    print("test accuracy: \t%0.4g +/- %g" % (np.mean(test_acc),np.std(test_acc)) )
+
+    #print(featsY_all.shape)
+    #print("Yfeats on line 0:")
+    #print(featsY_all[3][0])
+
+    #print("line0 feats from X_train...")
+    #print(y_train[0][3])
+
+
+    
+    ##grab subpixel accuracy feats. using SIFT
+    #sift = cv2.xfeatures2d.SIFT_create()
+    #cv2.imshow("grayscale img", X_train[10])
+    #cv2.waitKey(0)
+
+    #kp, descriptors = sift.detectAndCompute(X_train[10], None)
+    #img = cv2.drawKeypoints(X_train[10],kp,X_train[10])
+    #cv2.imshow("keypoints", img)
+    #cv2.waitKey(0)
     
 main()
-
-
-
-
-
-
-
-
-
 
 
 
