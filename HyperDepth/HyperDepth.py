@@ -109,31 +109,52 @@ def main():
     kept_feats = [0]*img_h
 
     # loop through individual lines of images, grab features (individual pixels)
-    featsX_all = np.zeros((img_h,len(X_train),img_w))
-    featsY_all = np.zeros((img_h,len(y_train),img_w))
+    trainfeatsX_all = np.zeros((img_h,len(X_train),img_w))
+    trainfeatsY_all = np.zeros((img_h,len(y_train),img_w))
+
+    testfeatsX_all = np.zeros((img_h, len(X_test), img_w))
+    testfeatsY_all = np.zeros((img_h, len(y_test), img_w))
     #for each image in training set
 
     for line_idx in range(img_h):
         for image in range(len(X_train)):
             for pixel in range(img_w):
-                featsX_all[line_idx][image][pixel] = X_train[image][line_idx][pixel]
-    print(y_train.shape)
+                trainfeatsX_all[line_idx][image][pixel] = X_train[image][line_idx][pixel]
+
+    #print(y_train.shape)
     for line_idx in range(img_h):
         for image in range(len(y_train)):
             for pixel in range(img_w):
-                featsY_all[line_idx][image][pixel] = y_train[image][line_idx][pixel]
+                trainfeatsY_all[line_idx][image][pixel] = y_train[image][line_idx][pixel]
 
+    for line_idx in range(img_h):
+        for image in range(len(X_test)):
+            for pixel in range(img_w):
+                testfeatsX_all[line_idx][image][pixel] = X_test[image][line_idx][pixel]
+
+    for line_idx in range(img_h):
+        for image in range(len(y_test)):
+            for pixel in range(img_w):
+                testfeatsY_all[line_idx][image][pixel] = y_test[image][line_idx][pixel]
 
     # fit models to scanlines
 
+    print(trainfeatsX_all.shape)
+    print(trainfeatsY_all.shape)
+    print(testfeatsX_all.shape)
+    print(testfeatsY_all.shape)
+
     for line_idx in range(img_h):
-        models[line_idx].fit(featsX_all[line_idx], featsY_all[line_idx])
+        models[line_idx].fit(trainfeatsX_all[line_idx], trainfeatsY_all[line_idx])
 
         #compute accuracy
         # NOTE: RFC.score only returns mean accuracy, not RMSE -- add change later
         # NOTE: currently throws error because .score doesn't support anything other than binary classification
-        temp = models[line_idx].score(featsX_all[line_idx], featsY_all[line_idx])
-        training_acc[line_idx], test_acc[line_idx] = temp
+        #temp = models[line_idx].score(featsX_all[line_idx], featsY_all[line_idx])
+        training_acc[line_idx], training_rmse[line_idx], test_acc[line_idx], test_rmse[line_idx] = utils.eval_accuracy(
+                                   trainfeatsX_all[line_idx], trainfeatsY_all[line_idx], 
+                                   testfeatsX_all[line_idx], testfeatsY_all[line_idx], models[line_idx])
+
 
     print("End results:")
     print("training accuracy: \t%0.4g +/- %g" % (np.mean(training_acc),np.std(training_acc)) )

@@ -139,7 +139,33 @@ def extract_line(image, img_w, img_dims, idx):
         feats.append(p)
     return feats
 
-#def eval_accuracy(train, test, model, verbose=True):
+def accuracy( labels, logits ):
+    return np.mean(labels==logits)
+    
+def mse( labels, logits ):
+    return np.mean( np.square(np.float64(labels)-np.float64(logits)) )
+
+def rmse( labels, logits ):
+    return np.sqrt(mse(labels, logits))
+
+def eval_accuracy(trainX, trainY, testX, testY, model):
+    train_acc, train_rmse = eval_batch(trainX, trainY, model)
+    test_acc, test_rmse = eval_batch(testX, testY, model)
+
+    return train_acc, train_rmse, test_acc, test_rmse
+
+def eval_batch(X, y, model):
+
+    probabilities = model.predict_proba(X)
+    prediction = model.predict(X)
+    #confidence = np.max(probabilities, axis = -1)
+    #print("prediction is ", prediction, "with confidence ", confidence)
+
+    eval_acc = accuracy(prediction, y)
+    eval_rmse = rmse(prediction, y)
+
+    return eval_acc, eval_rmse
+
 
 
 
