@@ -1,7 +1,7 @@
 import cv2
 from cv2 import xfeatures2d
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold, cross_val_score, cross_val_predict
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -39,7 +39,10 @@ def get_dataset():
     images_all = np.asarray(images_all)
     disps_all = np.asarray(disps_all)
     #reshape if necessary?
-    X_train, X_test, y_train, y_test = train_test_split(images_all, disps_all, test_size = 0.33, random_state = 1234)
+    return images_all, disps_all
+
+
+    #X_train, X_test, y_train, y_test = train_test_split(images_all, disps_all, test_size = 0.33, random_state = 1234)
 
   #  print("done loading")
 
@@ -53,7 +56,7 @@ def get_dataset():
 
    # plt.show()
 
-    return X_train, X_test, y_train, y_test
+    #return X_train, X_test, y_train, y_test
 
 
 def get_model(num_trees, forest_depth):
@@ -91,29 +94,37 @@ def main():
     num_trees = 4
     img_h = 480
     img_w = 640
-
-    X_train, X_test, y_train, y_test = get_dataset()
+    X, y = get_dataset()
+    #X_train, X_test, y_train, y_test = get_dataset()
     print("done loading in dataset")
 
     # set up classifiers, one RF per line
+    # cross validate each model
     models = []
     for x in range(img_h):
         models.append(get_model(num_trees, forest_depth))
 
     # set up accuracy, rmse, and feature arrays
-
     training_acc = [0]*img_h
     test_acc = [0]*img_h
     training_rmse = [0]*img_h
     test_rmse = [0]*img_h
     kept_feats = [0]*img_h
-
+    
     # loop through individual lines of images, grab features (individual pixels)
+    # NEED TO REDO THIS SO IT'S JUST X AND Y FOR CROSS VALIDATION
+
     trainfeatsX_all = np.zeros((img_h,len(X_train),img_w))
     trainfeatsY_all = np.zeros((img_h,len(y_train),img_w))
 
     testfeatsX_all = np.zeros((img_h, len(X_test), img_w))
     testfeatsY_all = np.zeros((img_h, len(y_test), img_w))
+
+    #REDO SO IT'S LIKE THIS
+
+    Xfeats_all = np.zeros((img_h, len(X), img_w))
+    yfeats_all = np.zeros((img_h, len(X), img_w))
+
     #for each image in training set
 
     for line_idx in range(img_h):
@@ -144,16 +155,25 @@ def main():
     print(testfeatsX_all.shape)
     print(testfeatsY_all.shape)
 
-    for line_idx in range(img_h):
-        models[line_idx].fit(trainfeatsX_all[line_idx], trainfeatsY_all[line_idx])
+    print("done setting up feature data")
 
-        #compute accuracy
-        # NOTE: RFC.score only returns mean accuracy, not RMSE -- add change later
-        # NOTE: currently throws error because .score doesn't support anything other than binary classification
-        #temp = models[line_idx].score(featsX_all[line_idx], featsY_all[line_idx])
-        training_acc[line_idx], training_rmse[line_idx], test_acc[line_idx], test_rmse[line_idx] = utils.eval_accuracy(
-                                   trainfeatsX_all[line_idx], trainfeatsY_all[line_idx], 
-                                   testfeatsX_all[line_idx], testfeatsY_all[line_idx], models[line_idx])
+    # cross validation
+
+    kfold = KFold(n_splits = 3, shuffle = False)
+    cvscores = []
+
+    for train, test in kfold.split(X, y): #might need to use feature array?
+
+        for line_idx in range(img_h):
+            models[line_idx].fit(Xfeats_all[line_idx], yfeats_all[line_idx]) #need to account for train, test!
+
+            #compute accuracy
+            # NOTE: RFC.score only returns mean accuracy, not RMSE -- add change later
+            # NOTE: currently throws error because .score doesn't support anything other than binary classification
+            #temp = models[line_idx].score(featsX_all[line_idx], featsY_all[line_idx])
+            training_acc[line_idx], training_rmse[line_idx], test_acc[line_idx], test_rmse[line_idx] = utils.eval_accuracy(
+                                       trainfeatsX_all[line_idx], trainfeatsY_all[line_idx], 
+                                       testfeatsX_all[line_idx], testfeatsY_all[line_idx], models[line_idx])
 
 
     print("End results:")
